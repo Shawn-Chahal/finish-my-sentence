@@ -1,12 +1,15 @@
+import copy
 import os
 import pickle
 import numpy as np
 import tensorflow as tf
-import copy
 
 
-def text_generator(text, scale_factor=3.0):
+def text_generator(text, scale_factor):
     len_generated_text = 100
+
+    if (text[-1] != ' ') and (len(text) > 2):
+        text = text + ' '
 
     if len(text) % ngram != 0:
         text = ' ' + text
@@ -53,13 +56,15 @@ def text_generator(text, scale_factor=3.0):
     return output_text
 
 
+model_dir = 'lite'
+
 tf.random.set_seed(1)
 
-model = tf.keras.models.load_model(os.path.join('objects', 'model.h5'))
-char_to_int = pickle.load(open(os.path.join('objects', 'char_to_int.pkl'), 'rb'))
-int_to_char = pickle.load(open(os.path.join('objects', 'int_to_char.pkl'), 'rb'))
-batch_size = pickle.load(open(os.path.join('objects', 'batch_size.pkl'), 'rb'))
-ngram = pickle.load(open(os.path.join('objects', 'ngram.pkl'), 'rb'))
+model = tf.keras.models.load_model(os.path.join(model_dir, 'objects', 'model.h5'))
+char_to_int = pickle.load(open(os.path.join(model_dir, 'objects', 'char_to_int.pkl'), 'rb'))
+int_to_char = pickle.load(open(os.path.join(model_dir, 'objects', 'int_to_char.pkl'), 'rb'))
+batch_size = pickle.load(open(os.path.join(model_dir, 'objects', 'batch_size.pkl'), 'rb'))
+ngram = pickle.load(open(os.path.join(model_dir, 'objects', 'ngram.pkl'), 'rb'))
 
 user_message = ["It was the last night of their journey to",
                 "He set off for",
@@ -68,7 +73,7 @@ user_message = ["It was the last night of their journey to",
                 "T"
                 ]
 
-scales = np.linspace(0.8, 2.2, 5)
+scales = np.linspace(1.0, 2.0, 5)
 
 for scale_factor in scales:
     print(f'---Scale Factor: {scale_factor}---')
