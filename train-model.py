@@ -1,4 +1,3 @@
-import copy
 import os
 import pathlib
 import pickle
@@ -16,8 +15,6 @@ def input_output(text):
     return input_text, output_text
 
 
-ngram = 2
-
 tf.random.set_seed(1)
 
 data_dir = pathlib.Path('.')
@@ -33,46 +30,37 @@ text = re.sub(r'\n', ' ', text)
 text = re.sub(r'\t', ' ', text)
 text = re.sub(r'\xa0', ' ', text)
 text = re.sub(r'\ufeff', ' ', text)
+
 for i in range(100):
     text = re.sub(r'  ', ' ', text)
-
-if ngram > 1:
-
-    text_token = []
-    for i in range(0, len(text), ngram):
-        text_token.append(text[i: i + ngram])
-    text = copy.copy(text_token)
 
 char_set = set(text)
 num_char = len(char_set)
 sorted_char_set = sorted(char_set)
+int_to_char = np.array(sorted_char_set)
+char_to_int = {ch: i for i, ch in enumerate(list(int_to_char))}
 
-char_to_int = {ch: i for i, ch in enumerate(sorted_char_set)}
+pickle.dump(int_to_char, open(os.path.join('objects', 'int_to_char.pkl'), 'wb'))
 
 print('Total Length:', len(text))
 print('Unique Characters:', num_char)
 
-int_to_char = np.array(sorted_char_set)
-
 text_encoded = np.array([char_to_int[ch] for ch in text])
 ds_text_encoded = tf.data.Dataset.from_tensor_slices(text_encoded)
 
-sequence_length = 500
+sequence_length = 512
 batch_size = 1
 buffer_size = 20000
+embedding_vector_size = 64
 
 ds_sequences_raw = ds_text_encoded.batch((sequence_length + 1), drop_remainder=True)
 ds_sequences = ds_sequences_raw.map(input_output)
-
-pickle.dump(char_to_int, open(os.path.join('objects', 'char_to_int.pkl'), 'wb'))
-pickle.dump(int_to_char, open(os.path.join('objects', 'int_to_char.pkl'), 'wb'))
-pickle.dump(ngram, open(os.path.join('objects', 'ngram.pkl'), 'wb'))
-
 ds = ds_sequences.shuffle(buffer_size).batch(batch_size, drop_remainder=True)
 
-model = tf.keras.Sequential([tf.keras.layers.Embedding(num_char, 64, batch_input_shape=[batch_size, None]),
-                             tf.keras.layers.LSTM(512, return_sequences=True, stateful=True),
-                             tf.keras.layers.Dense(num_char)])
+model = tf.keras.Sequential(
+    [tf.keras.layers.Embedding(num_char, embedding_vector_size, batch_input_shape=[batch_size, None]),
+     tf.keras.layers.LSTM(512, return_sequences=True, stateful=True),
+     tf.keras.layers.Dense(num_char)])
 
 model.compile(optimizer=tf.keras.optimizers.Adam(),
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True))
