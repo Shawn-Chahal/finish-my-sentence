@@ -3,10 +3,11 @@ import os
 import pathlib
 import pickle
 import re
-import numpy as np
-import tensorflow as tf
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 
 def input_output(text):
