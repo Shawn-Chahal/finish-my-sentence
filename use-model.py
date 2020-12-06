@@ -58,7 +58,7 @@ user_message = ["It was the last night of their journey to",
                 "T"
                 ]
 
-scales = np.linspace(1, 3, 5)
+scales = np.linspace(1, 2.5, 5)
 
 for scale_factor in scales:
     print(f'---Scale Factor: {scale_factor}---')
